@@ -1,0 +1,87 @@
+# Namespace: test
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test
+
+---
+# Deployment in default namespace
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: default
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.17.10
+        ports:
+        - containerPort: 80
+
+---
+# Deployment in test
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd-deployment
+  namespace: test
+  labels:
+    app: httpd
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: httpd
+  template:
+    metadata:
+      labels:
+        app: httpd
+    spec:
+      containers:
+      - name: httpd
+        image: httpd:2.4
+        ports:
+        - containerPort: 80
+
+---
+# Service in default namespace
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: default
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+
+---
+# Service in test
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd-service
+  namespace: test
+spec:
+  selector:
+    app: httpd
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP

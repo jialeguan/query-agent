@@ -1,0 +1,7 @@
+requests
+Flask
+pydantic
+kubernetes
+langchain
+langchain_community
+openai

@@ -1,0 +1,4 @@
+old/
+.vscode/
+*.pyc
+agent.log
