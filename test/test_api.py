@@ -20,7 +20,7 @@ def get_kubectl_expected_results():
         "kubectl get pods -n test --no-headers", shell=True, text=True
     ).strip().split("\n")
 
-    target_pod = pod_list[0].split()[0]
+    pod_name = pod_list[0].split()[0]
 
     # 1. Query: Number of pods in the default namespace
     try:
@@ -46,17 +46,11 @@ def get_kubectl_expected_results():
     # 3. Query: Get the status of a specific pod in the test namespace
         # select the first pod from the list
     try:
-        pod_list = subprocess.check_output(
-            "kubectl get pods -n test --no-headers", shell=True, text=True
-        ).strip().split("\n")
-
-        if pod_list:
-            pod_name = pod_list[0].split()[0]
-            pod_status = subprocess.check_output(
-                f"kubectl get pod {pod_name} -n test -o jsonpath={{.status.phase}}", shell=True, text=True
-            ).strip()
-            test_cases.append(
-                {"query": f"Get the status of the pod {pod_name} in the test namespace.", "expected": pod_status})
+        pod_status = subprocess.check_output(
+            f"kubectl get pod {pod_name} -n test -o jsonpath={{.status.phase}}", shell=True, text=True
+        ).strip()
+        test_cases.append(
+            {"query": f"Get the status of the pod {pod_name} in the test namespace.", "expected": pod_status})
     except subprocess.CalledProcessError as e:
         print(f"Error executing kubectl command for pod status: {e}")
 

@@ -18,7 +18,11 @@ class KubernetesAgent:
         self.system_prompt = """
         You are a Kubernetes management assistant.
         When you invoke a took, please provide the necessary parameters as a JSON object.
-        If not specified, do not check different namespaces, label, or deployment.
+        **Notes**:
+        - If not specified, do not check different namespaces, label, or deployment.
+        - Only respond with the exact number or result, without any additional words or context.
+        - Return only the answer, without identifiers (e.g., "mongodb" instead of "mongodb-56c598c8fc").
+
         """
 
         self.llm = ChatOpenAI(temperature=0.1,)

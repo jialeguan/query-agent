@@ -20,9 +20,17 @@ pod query
 '''
 
 
-def get_pod_count(action_input: str) -> str:
+def get_pod_count(action_input: str) -> int:
     """
     Get the number of pods in the specified namespace.
+    Input: {"namespace": "default"}
+    """
+    return len(get_pod_list(action_input))
+
+
+def get_pod_list(action_input: str) -> str:
+    """
+    Get the list of pods in the specified namespace.
     Input: {"namespace": "default"}
     """
     logging.info(f"Input data: {action_input}")
@@ -31,7 +39,8 @@ def get_pod_count(action_input: str) -> str:
     namespace = action_input.get("namespace", "default")
     k8s_client = client.CoreV1Api()
     pods = k8s_client.list_namespaced_pod(namespace)
-    return f"There are {len(pods.items)} pods in the {namespace} namespace."
+    pod_list = [pod.metadata.name for pod in pods.items]
+    return pod_list
 
 
 def get_pod_status(action_input: str) -> str:
@@ -48,7 +57,7 @@ def get_pod_status(action_input: str) -> str:
 
     k8s_client = client.CoreV1Api()
     pod = k8s_client.read_namespaced_pod(pod_name, namespace)
-    return f"The status of pod {pod_name} is {pod.status.phase}."
+    return pod.status.phase
 
 
 def get_pod_logs(action_input: str) -> str:
@@ -64,11 +73,14 @@ def get_pod_logs(action_input: str) -> str:
     namespace = action_input.get("namespace", "default")
 
     k8s_client = client.CoreV1Api()
-    logs = k8s_client.read_namespaced_pod_log(pod_name, namespace)
-    return logs
+    try:
+        logs = k8s_client.read_namespaced_pod_log(pod_name, namespace)
+        return logs
+    except client.exceptions.ApiException as e:
+        return f"Error retrieving logs: {str(e)}"
 
 
-def get_pods_by_deployment(action_input: str) -> str:
+def get_pods_by_deployment(action_input: str) -> int:
     """
     Get the number of pods spawned by a deployment in the specified namespace.
     Input: {"deployment_name": "example-deployment", "namespace": "default"}
@@ -92,13 +104,13 @@ def get_pods_by_deployment(action_input: str) -> str:
         pods = k8s_client.list_namespaced_pod(
             namespace, label_selector=label_selector)
 
-        return f"There are {len(pods.items)} pods spawned by the {deployment_name} deployment."
+        return len(pods.items)
 
     except client.exceptions.ApiException as e:
         return f"Error retrieving pods by deployment: {str(e)}"
 
 
-def get_pods_with_label(action_input: str) -> str:
+def get_pods_with_label(action_input: str) -> int:
     """
     Get the number of pods with a specific label in the specified namespace.
     Input: {"label_key": "app", label_value: "nginx", "namespace": "default"}
@@ -114,7 +126,7 @@ def get_pods_with_label(action_input: str) -> str:
     k8s_client = client.CoreV1Api()
     pods = k8s_client.list_namespaced_pod(
         namespace, label_selector=f"{label_key}={label_value}")
-    return f"There are {len(pods.items)} pods with the label {label_key}={label_value}."
+    return len(pods.items)
 
 
 '''
@@ -122,7 +134,7 @@ service query
 '''
 
 
-def get_service_count(action_input: str) -> str:
+def get_service_count(action_input: str) -> int:
     """
     Get the number of services in the specified namespace.
     Input: {"namespace": "default"}
@@ -133,10 +145,25 @@ def get_service_count(action_input: str) -> str:
 
     k8s_client = client.CoreV1Api()
     services = k8s_client.list_namespaced_service(namespace)
-    return f"There are {len(services.items)} services in the {namespace} namespace."
+    return len(services.items)
 
 
-def get_service_count_all(action_input: str) -> str:
+def get_service_list(action_input: str) -> str:
+    """
+    Get the list of services in the specified namespace.
+    Input: {"namespace": "default"}
+    """
+    logging.info(f"Input data: {action_input}")
+    action_input = evaluate(action_input)
+    namespace = action_input.get("namespace", "default")
+
+    k8s_client = client.CoreV1Api()
+    services = k8s_client.list_namespaced_service(namespace)
+    service_list = [service.metadata.name for service in services.items]
+    return service_list
+
+
+def get_service_count_all(action_input: str) -> int:
     """
     Get the number of services in all namespaces.
     Input: {}
@@ -145,12 +172,20 @@ def get_service_count_all(action_input: str) -> str:
 
     k8s_client = client.CoreV1Api()
     services = k8s_client.list_service_for_all_namespaces()
-    return f"There are {len(services.items)} services in the cluster."
+    return len(services.items)
 
 
-def get_deployment_count(action_input: str) -> str:
+def get_deployment_count(action_input: str) -> int:
     """
     Get the number of deployments in the specified namespace.
+    Input: {"namespace": "default"}
+    """
+    return len(get_deployment_list(action_input))
+
+
+def get_deployment_list(action_input: str):
+    """
+    Get the list of deployments in the specified namespace.
     Input: {"namespace": "default"}
     """
     logging.info(f"Input data: {action_input}")
@@ -159,22 +194,29 @@ def get_deployment_count(action_input: str) -> str:
 
     k8s_client = client.AppsV1Api()
     deployments = k8s_client.list_namespaced_deployment(namespace)
-    return f"There are {len(deployments.items)} deployments in the {namespace} namespace."
+    deployment_list = [
+        deployment.metadata.name for deployment in deployments.items]
+    return deployment_list
 
 
-def get_node_count(action_input: str) -> str:
+def get_node_count(action_input: str) -> int:
+    return len(get_node_list(action_input))
+
+
+def get_node_list(action_input: str) -> str:
     """
-    Get the number of nodes in the cluster.
+    Get the list of nodes in the cluster.
     Input: {}
     """
     logging.info(f"Input data: {action_input}")
 
     k8s_client = client.CoreV1Api()
     nodes = k8s_client.list_node()
-    return f"There are {len(nodes.items)} nodes in the cluster."
+    node_list = [node.metadata.name for node in nodes.items]
+    return node_list
 
 
-def get_namespace_count(action_input: str) -> str:
+def get_namespace_count(action_input: str) -> int:
     """
     Get the number of namespaces in the cluster.
     Input: {}
@@ -183,4 +225,4 @@ def get_namespace_count(action_input: str) -> str:
 
     k8s_client = client.CoreV1Api()
     namespaces = k8s_client.list_namespace()
-    return f"There are {len(namespaces.items)} namespaces in the cluster."
+    return len(namespaces.items)
