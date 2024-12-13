@@ -1,84 +1,146 @@
-# Cleric Query Agent Assignment
+# KubernetesAgent: Automating and Securing `kubectl` Command Generation
 
-## Introduction
-This document outlines the requirements and guidelines for the Cleric Query Agent Assignment. Your task is to develop an AI agent capable of accurately answering queries about applications deployed on a Kubernetes cluster.
+## Overview
 
-## Objective
-Create an AI agent that interacts with a Kubernetes cluster to answer queries about its deployed applications.
+This project provides a Python-based agent, `KubernetesAgent`, that automates the generation, safety evaluation, and execution of Kubernetes `kubectl` commands. By leveraging OpenAI's language model through LangChain, the agent translates natural language instructions into executable `kubectl` commands, ensures their safety, and executes them in a Kubernetes cluster.
 
-## Assignment Details
+The agent is designed with modularity, safety, and usability in mind. It ensures the generated commands are syntactically correct, evaluates their safety before execution, and seamlessly integrates with Kubernetes environments.
 
-### Technical Requirements
-- Use Python 3.10
-- The kubeconfig file will be located at `~/.kube/config`
-- Utilize GPT-4 or a model with comparable performance for natural language processing
+---
 
-### API Specifications
-Your agent should provide a POST endpoint for query submission:
-- URL: `http://localhost:8000/query`
-- Port: 8000
-- Payload format:
-  ```json
-  {
-      "query": "How many pods are in the default namespace?"
-  }
-  ```
-- Response format (using Pydantic):
-  ```python
-  from pydantic import BaseModel
+## Features
 
-  class QueryResponse(BaseModel):
-      query: str
-      answer: str
-  ```
+1. **Natural Language to `kubectl` Command Translation**:
+   - Converts plain-language instructions into valid `kubectl` commands using OpenAI's LLM.
+   - Ensures commands are returned in a structured JSON format.
 
-### Scope of Queries
-- Queries will require only read actions from your agent
-- Topics may include status, information, or logs of resources deployed on Minikube
-- Answers will not change dynamically
-- Approximately 10 queries will be asked
-- Queries are independent of each other
-- Return only the answer, without identifiers (e.g., "mongodb" instead of "mongodb-56c598c8fc")
+2. **Safety Evaluation**:
+   - Evaluates the safety of `kubectl` commands to prevent accidental or harmful operations.
+   - Provides a clear safety decision (`safe` or `unsafe`) and the reasoning behind it.
 
-## Submission Guidelines
-Submit your repository to [submission link](https://query-agent-assignment-validator-347704744679.us-central1.run.app/)
- - The validator will return your score within a few minutes
- - Use logging if you want to check your outputs, make sure write logs to `agent.log`
- - If you encounter errors, wait a few minutes before retrying
- - Do not refresh the browser to avoid losing your session
- - Make sure to note your `Submission ID` for the Google form for the final submission.
+3. **Command Execution**:
+   - Executes the generated and validated `kubectl` commands in the configured Kubernetes environment.
+   - Logs detailed execution results, including output and errors.
 
-### Submission Requirements
-1. GitHub Repository
-   - Include a `README.md` file describing your approach
-   - Ensure your main script is named `main.py`
-2. Loom Video
-   - Keep it informal and personal
-   - Focus on your motivation and background
-3. Submit the `Loom video` and `submission ID` for the final submission on this [Google Form Link](https://docs.google.com/forms/d/e/1FAIpQLScUpEklWG-hYCIsBFo9pD-SAtyaCsevhQSz6XRLKkLV_K3KuQ/viewform?usp=sf_link)
+4. **Kubernetes Environment Initialization**:
+   - Automatically detects in-cluster or out-of-cluster configurations for Kubernetes clients.
 
-## Submission Deadline:
-There is no specific deadline for submitting this assignment;  however, we expect it to be completed within a **reasonable amount of time**. 
-- We understand that personal and professional responsibilities can take priority, 
-and we encourage you to balance this assignment with your other commitments. 
-- Please aim to submit your work once you feel confident in your solution and it aligns with the objectives.
+---
 
-## Testing Your Agent
-We recommend testing your agent locally before submission:
-1. Install [Minikube](https://minikube.sigs.k8s.io/docs/start/)
-2. Set up a local Kubernetes cluster
-3. Deploy sample applications
-4. Run your agent and test with sample queries
+## Approach
 
-## Evaluation Criteria
-- Accuracy of answers
-- Code quality and organization
-- Clarity of explanation in README and video
+### 1. **Prompt Templates with Structured Output**
 
-## Example Queries and Responses
-1. Q: "Which pod is spawned by my-deployment?"
-   A: "my-pod"
-2. Q: "What is the status of the pod named 'example-pod'?"
-   A: "Running"
-3. Q: "How many nodes are there in the cluster?"
-   A: "2"
+The agent uses LangChain's `PromptTemplate` to define prompts for both translation and safety evaluation. Each prompt enforces structured JSON output, parsed using `JsonOutputParser`.
+
+- **Command Translation**:
+  - Input: Natural language instruction.
+  - Output: JSON object containing the `kubectl` command.
+  - Example:
+
+    ```json
+    {
+      "command": "kubectl get pods -n default"
+    }
+    ```
+
+- **Safety Evaluation**:
+  - Input: `kubectl` command.
+  - Output: JSON object indicating safety and reasoning.
+  - Example:
+
+    ```json
+    {
+      "safe": true,
+      "reason": "The command only lists resources and does not make changes."
+    }
+    ```
+
+### 2. **Chains for Workflow Automation**
+
+LangChain's chaining mechanism is used to seamlessly integrate:
+
+- Prompt generation.
+- LLM interaction.
+- Structured JSON parsing.
+
+```python
+self.translate_chain = translate_prompt | self.llm | command_parser
+self.safety_chain = safety_prompt | self.llm | safety_parser
+```
+
+### 3. **Kubernetes Client Initialization**
+
+Handles both in-cluster and out-of-cluster Kubernetes client configurations:
+
+- Tries to load in-cluster config.
+- Falls back to ~/.kube/config if not running in a cluster.
+
+---
+
+## How It Works
+
+1. **Translate Instruction**:
+   - Takes a natural language input (e.g., "List all pods in the default namespace").
+   - Converts it into a structured JSON response with the `kubectl` command.
+
+2. **Evaluate Safety**:
+
+   - Checks the command's safety using LangChain and returns a boolean indicating whether the command is safe to execute.
+
+3. **Execute Command**:
+
+    - If the command is safe, it is executed using `subprocess.run`.
+    - The execution output or error is logged and returned.
+
+---
+
+## Usage
+
+1. **Create kubernetes cluster**:
+
+    ```bash
+    kubectl create -f k8s/deployment.yaml
+    ```
+
+1. **Install Dependencies**:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+1. **Run the Agent**:
+
+   ```bash
+   python main.py
+   ```
+
+1. **Use Test**:
+
+    ```bath
+    python test/test_api.py
+    ```
+
+---
+
+## Future Work
+
+1. **Interactive Feedback**:
+
+    - Allow users to refine instructions if the generated command is incorrect.
+
+1. **Extended Safety Evaluation**:
+
+    - Integrate more sophisticated checks for potential command risks.
+
+1. **Support for More Instructions**:
+
+    - Fine-tune the language model and feed with more examples and documents to support a broader range of instructions.
+
+1. **Batch Processing**:
+
+    - Handle multiple instructions in a single execution pipeline.
+
+1. **Enhanced Logging**:
+
+    - Include detailed execution metrics and timing information.

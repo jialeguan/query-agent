@@ -1,4 +1,6 @@
-old/
+obsolete/
 .vscode/
 *.pyc
 agent.log
+
+__pycache__/

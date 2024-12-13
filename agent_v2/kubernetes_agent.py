@@ -1,6 +1,5 @@
 import logging
 import os
-import re
 import subprocess
 
 from kubernetes import config
@@ -25,6 +24,7 @@ class KubernetesAgent:
         self.llm = ChatOpenAI(temperature=0.1, model="gpt-4o")
 
         command_parser = JsonOutputParser(pydantic_object=CommandResponse)
+
         translate_prompt = PromptTemplate(
             input_variables=["instruction"],
             partial_variables={
@@ -40,6 +40,7 @@ class KubernetesAgent:
         )
 
         safety_parser = JsonOutputParser(pydantic_object=SafeResponse)
+
         safety_prompt = PromptTemplate(
             input_variables=["command"],
             partial_variables={
@@ -132,10 +133,3 @@ class KubernetesAgent:
         if not self.evaluate_safety(command):
             return "Command not executed due to safety concerns."
         return self.execute_command(command)
-
-
-# if __name__ == "__main__":
-#     agent = KubernetesAgent()
-#     instruction = "How many pods are in the default namespace"
-#     response = agent.handle_query(instruction)
-#     print(response)
