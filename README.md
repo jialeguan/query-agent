@@ -4,7 +4,24 @@
 
 This project provides a Python-based agent, `KubernetesAgent`, that automates the generation, safety evaluation, and execution of Kubernetes `kubectl` commands. By leveraging OpenAI's language model through LangChain, the agent translates natural language instructions into executable `kubectl` commands, ensures their safety, and executes them in a Kubernetes cluster.
 
-The agent is designed with modularity, safety, and usability in mind. It ensures the generated commands are syntactically correct, evaluates their safety before execution, and seamlessly integrates with Kubernetes environments.
+The agent is designed with modularity, safety, and usability in mind. It ensures the generated commands are syntactically correct, evaluates their safety before execution, and seamlessly integrates with Kubernetes environments
+
+---
+
+## How It Works
+
+1. **Translate Instruction**:
+   - Takes a natural language input (e.g., "List all pods in the default namespace").
+   - Converts it into a structured JSON response with the `kubectl` command.
+
+2. **Evaluate Safety**:
+
+   - Checks the command's safety using LangChain and returns a boolean indicating whether the command is safe to execute.
+
+3. **Execute Command**:
+
+    - If the command is safe, it is executed using `subprocess.run`.
+    - The execution output or error is logged and returned.
 
 ---
 
@@ -75,23 +92,6 @@ Handles both in-cluster and out-of-cluster Kubernetes client configurations:
 
 - Tries to load in-cluster config.
 - Falls back to ~/.kube/config if not running in a cluster.
-
----
-
-## How It Works
-
-1. **Translate Instruction**:
-   - Takes a natural language input (e.g., "List all pods in the default namespace").
-   - Converts it into a structured JSON response with the `kubectl` command.
-
-2. **Evaluate Safety**:
-
-   - Checks the command's safety using LangChain and returns a boolean indicating whether the command is safe to execute.
-
-3. **Execute Command**:
-
-    - If the command is safe, it is executed using `subprocess.run`.
-    - The execution output or error is logged and returned.
 
 ---
 

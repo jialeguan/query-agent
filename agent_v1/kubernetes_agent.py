@@ -22,7 +22,6 @@ class KubernetesAgent:
         - If not specified, do not check different namespaces, label, or deployment.
         - Only respond with the exact number or result, without any additional words or context.
         - Return only the answer, without identifiers (e.g., "mongodb" instead of "mongodb-56c598c8fc").
-
         """
 
         self.llm = ChatOpenAI(temperature=0.1,)

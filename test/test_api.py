@@ -12,16 +12,6 @@ test_cases = [
         "expected": "3"
     },
     {
-        # kubectl get services -n default --no-headers | wc -l
-        "query": "How many services are in the default namespace?",
-        "expected": "2"
-    },
-    {
-        # kubectl get pods --selector=app=nginx
-        "query": "What is the status of the pod named nginx-deployment-7cdd46f898-4nvkv",
-        "expected": "1"
-    },
-    {
         # kubectl get nodes --no-headers | wc -l
         "query": "How many nodes are in the cluster?",
         "expected": "1"
@@ -30,6 +20,16 @@ test_cases = [
         # kubectl get namespaces --no-headers | wc -l
         "query": "How many namespaces are in the cluster?",
         "expected": "5"
+    },
+    {
+        # kubectl get services -n default --no-headers | wc -l
+        "query": "How many services are in the default namespace?",
+        "expected": "2"
+    },
+    {
+        # kubectl get pod nginx-deployment-7cdd46f898-r8x4c
+        "query": "What is the running status of the pod named nginx-deployment-7cdd46f898-r8x4c",
+        "expected": "Running"
     }
 ]
 

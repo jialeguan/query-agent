@@ -100,10 +100,9 @@ class KubernetesAgent:
         evaluate the safety of the kubectl command
         '''
         response = self.safety_chain.invoke({"command": command})
-        safe = response["safe"]
         logging.info(response)
         # print(response)
-        return safe
+        return response["safe"]
 
     def execute_command(self, command: str):
         '''
