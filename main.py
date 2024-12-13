@@ -3,7 +3,7 @@ import logging
 from flask import Flask, jsonify, request
 from pydantic import BaseModel, ValidationError
 
-from agent.kubernetes_agent import KubernetesAgent
+from agent_v2.kubernetes_agent import KubernetesAgent
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, 
@@ -30,8 +30,7 @@ def create_query():
         # Log the question
         logging.info(f"Received query: {query}")
         
-        # Here, you can implement your logic to generate an answer for the given question.
-        # For simplicity, we'll just echo the question back in the answer.
+        # Handle the query using the Kubernetes agent
         answer = k8s_agent.handle_query(query)
         
         # Log the answer
@@ -40,7 +39,7 @@ def create_query():
         # Create the response model
         response = QueryResponse(query=query, answer=answer)
         
-        return jsonify(response.dict())
+        return jsonify(response.model_dump())
     
     except ValidationError as e:
         return jsonify({"error": e.errors()}), 400
