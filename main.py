@@ -18,6 +18,7 @@ class QueryResponse(BaseModel):
     answer: str
 
 
+k8s_agent = KubernetesAgent()
 
 @app.route('/query', methods=['POST'])
 def create_query():
@@ -29,7 +30,6 @@ def create_query():
         # Log the question
         logging.info(f"Received query: {query}")
         
-        k8s_agent = KubernetesAgent()
         # Handle the query using the Kubernetes agent
         answer = k8s_agent.handle_query(query)
         
